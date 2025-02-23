@@ -16,15 +16,15 @@ def index():
 @socketio.on("connect")
 def handle_connect():
     username = f"User_{random.randint(1000,9999)}"
-    gender = random.choice(["girl","boy"])
-    # https://avatar.iran.liara.run/public/boy?username=User_123
-    avatar_url = f" https://avatar.iran.liara.run/public/{gender}?username={username}"
+    gender = random.choice(["girl", "boy"])
+    avatar_seed = random.randint(1000, 9999)  # Unique seed for consistent avatar
+    avatar_url = f"https://api.dicebear.com/7.x/pixel-art/svg?seed={avatar_seed}"
 
-    users[request.sid] = { "username":username,"avatar":avatar_url}
+    users[request.sid] = {"username": username, "avatar": avatar_url}
 
-    emit("user_joined", {"username":username,"avatar":avatar_url},broadcast=True)
+    emit("user_joined", {"username": username, "avatar": avatar_url}, broadcast=True)
+    emit("set_username", {"username": username, "avatar": avatar_url})
 
-    emit("set_username", {"username":username})
 
 @socketio.on("disconnect")
 def handle_disconnect():
@@ -50,8 +50,9 @@ def handle_update_username(data):
     users[request.sid]["username"] = new_username
 
     emit("username_updated", {
-        "old_username":old_username,
-        "new_username":new_username
+        "old_username": old_username,
+        "new_username": new_username,
+        "avatar": users[request.sid]["avatar"]  # Send the same avatar
     }, broadcast=True)
 
 # Handle the random effect trigger event
